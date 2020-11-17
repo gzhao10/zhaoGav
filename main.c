@@ -8,7 +8,10 @@
 int random(){
   int ans[1];
   int fd = open("/dev/random", O_RDONLY);
-  if (fd == -1) printf("Error: %s\n", strerror(errno));
+  if (fd == -1) {
+    printf("Error: %s\n", strerror(errno));
+    return 0;
+  }
   int check = read(fd, ans, sizeof(ans));
   if (check == -1) printf("Error: %s\n", strerror(errno));
   return *ans;
@@ -26,22 +29,31 @@ int main(){
 
   printf("\n");
   printf("Writing numbers to file...\n");
-  int out = open("output", O_RDWR | O_CREAT, 0764);
-  if (out == -1) printf("Error: %s\n", strerror(errno));
-  int writecheck = write(out, arr, sizeof(arr));
-  if (writecheck == -1) printf("Error: %s\n", strerror(errno));
-
+  int fd = open("output", O_WRONLY | O_TRUNC | O_CREAT, 0640);
+  if (fd == -1) {
+    printf("Error: %s\n", strerror(errno));
+    return -1;
+  }
+  int writecheck = write(fd, arr, sizeof(arr));
+  if (writecheck == -1) {
+    printf("Error: %s\n", strerror(errno));
+    return -1;
+  }
+  close(fd);
 
   printf("\n");
   int newarr [10];
   printf("Reading numbers from file...\n");
-  int readcheck = read(out, newarr, sizeof(newarr));
-  if (readcheck == -1) printf("Error: %s\n", strerror(errno));
+  fd = open("output", O_RDONLY);
+  int readcheck = read(fd, newarr, sizeof(newarr));
+  if (readcheck == -1) {
+    printf("Error: %s\n", strerror(errno));
+    return -1;
+  }
 
   printf("\n");
   printf("Verification that written values were the same:\n");
   for (i = 0; i < 10; i++){
     printf("     random %d: %d\n", i, newarr[i]);
   }
-  //not sure what went wrong
 }
